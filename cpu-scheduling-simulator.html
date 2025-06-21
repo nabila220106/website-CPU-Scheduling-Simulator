@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced CPU Scheduling Simulator</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --accent-color: #e74c3c;
+            --dark-color: #2c3e50;
+            --light-color: #ecf0f1;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f7fa;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        h1 {
+            color: var(--dark-color);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        h2 {
+            color: var(--primary-color);
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+        }
+        
+        h3 {
+            color: var(--secondary-color);
+            font-size: 1.4rem;
+            margin: 20px 0 15px;
+        }
+        
+        h4 {
+            color: var(--dark-color);
+            font-size: 1.2rem;
+            margin: 15px 0 10px;
+        }
+        
+        .team-info {
+            background-color: var(--light-color);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .team-info h3 {
+            color: var(--dark-color);
+            margin-bottom: 10px;
+        }
+        
+        .team-members {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .member {
+            background-color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            font-weight: 500;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark-color);
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+        
+        input:focus, select:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+        
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            margin-top: 10px;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary-color);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #27ae60;
+        }
+        
+        .process-input {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+        
+        .results {
+            margin-top: 40px;
+            display: none;
+        }
+        
+        .algorithm-results {
+            background-color: white;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: var(--shadow);
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+        
+        th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 500;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        
+        tr:hover {
+            background-color: #e9e9e9;
+        }
+        
+        .gantt-chart {
+            display: flex;
+            margin-top: 20px;
+            overflow-x: auto;
+            padding: 10px 0;
+            align-items: center;
+        }
+        
+        .gantt-item {
+            min-width: 60px;
+            height: 40px;
+            padding: 5px;
+            text-align: center;
+            border: 1px solid #333;
+            margin-right: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            color: white;
+            position: relative;
+        }
+        
+        .gantt-item::after {
+            content: attr(data-end);
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            color: #333;
+        }
+        
+        .gantt-item:first-child::before {
+            content: "0";
+            position: absolute;
+            bottom: -20px;
+            left: -10px;
+            font-size: 12px;
+            color: #333;
+        }
+        
+        .time-marks {
+            display: flex;
+            margin-top: 30px;
+        }
+        
+        .time-mark {
+            font-size: 12px;
+            color: #666;
+            margin-right: 58px;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: var(--light-color);
+            border-radius: 8px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: 500;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            border-bottom-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .team-members {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .process-input {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Advanced CPU Scheduling Simulator</h1>
+            <h2>Round Robin, SJF, and FIFO Algorithms</h2>
+            
+            <div class="team-info">
+                <h3>Kelompok Sistem Operasi Lanjut</h3>
+                <div class="team-members">
+                    < <div class="member">alifa angie (11240043)</div>
+                   <div class="member"> Siti Dwi (11240070)</div>
+                   <div class="member">Mita awalia (11240071)</div>
+                   <div class="member">Nasyilla putri Nabila (11240072)</div>
+                   <div class="member">Ikhsan Nurgraha (11240073)</div>
+                </div>
+            </div>
+        </header>
+        
+        <div id="process-inputs">
+            <div class="form-group">
+                <label for="process-count">Number of Processes:</label>
+                <input type="number" id="process-count" min="1" value="3">
+                <button type="button" class="btn-secondary" onclick="generateProcessInputs()">Generate Process Inputs</button>
+            </div>
+            
+            <div id="process-forms"></div>
+            
+            <div class="form-group">
+                <label for="time-quantum">Time Quantum for Round Robin:</label>
+                <input type="number" id="time-quantum" min="1" value="2">
+            </div>
+            
+            <div class="form-group">
+                <label for="algorithm">Select Algorithm:</label>
+                <select id="algorithm">
+                    <option value="all">All Algorithms</option>
+                    <option value="rr">Round Robin</option>
+                    <option value="sjf">Shortest Job First</option>
+                    <option value="fifo">FIFO</option>
+                </select>
+            </div>
+            
+            <button type="button" onclick="runSimulation()">Run Simulation</button>
+        </div>
+        
+        <div id="results" class="results">
+            <h2>Simulation Results</h2>
+            
+            <div class="tabs">
+                <div class="tab active" data-tab="all">All Results</div>
+                <div class="tab" data-tab="rr">Round Robin</div>
+                <div class="tab" data-tab="sjf">SJF</div>
+                <div class="tab" data-tab="fifo">FIFO</div>
+            </div>
+            
+            <div id="all-results" class="tab-content active">
+                <div id="round-robin-results" class="algorithm-results">
+                    <h3>Round Robin Scheduling</h3>
+                    <div id="rr-table"></div>
+                    <div id="rr-stats" class="stats"></div>
+                    <h4>Gantt Chart</h4>
+                    <div id="rr-gantt-container"></div>
+                </div>
+                
+                <div id="srf-results" class="algorithm-results">
+                    <h3>Shortest Job First (SJF) Scheduling</h3>
+                    <div id="sjf-table"></div>
+                    <div id="sjf-stats" class="stats"></div>
+                    <h4>Gantt Chart</h4>
+                    <div id="sjf-gantt-container"></div>
+                </div>
+                
+                <div id="fifo-results" class="algorithm-results">
+                    <h3>First-In First-Out (FIFO) Scheduling</h3>
+                    <div id="fifo-table"></div>
+                    <div id="fifo-stats" class="stats"></div>
+                    <h4>Gantt Chart</h4>
+                    <div id="fifo-gantt-container"></div>
+                </div>
+            </div>
+            
+            <div id="rr-results" class="tab-content">
+                <div id="rr-single-table"></div>
+                <div id="rr-single-stats" class="stats"></div>
+                <h4>Gantt Chart</h4>
+                <div id="rr-single-gantt-container"></div>
+            </div>
+            
+            <div id="sjf-single-results" class="tab-content">
+                <div id="sjf-single-table"></div>
+                <div id="sjf-single-stats" class="stats"></div>
+                <h4>Gantt Chart</h4>
+                <div id="sjf-single-gantt-container"></div>
+            </div>
+            
+            <div id="fifo-single-results" class="tab-content">
+                <div id="fifo-single-table"></div>
+                <div id="fifo-single-stats" class="stats"></div>
+                <h4>Gantt Chart</h4>
+                <div id="fifo-single-gantt-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Process class
+        class Process {
+            constructor(pid, arrivalTime, burstTime) {
+                this.pid = pid;
+                this.arrivalTime = parseInt(arrivalTime);
+                this.burstTime = parseInt(burstTime);
+                this.remainingTime = parseInt(burstTime);
+                this.completionTime = 0;
+                this.waitingTime = 0;
+                this.turnaroundTime = 0;
+                this.startTime = null;
+                this.executionHistory = [];
+            }
+        }
+
+        // Generate input forms based on process count
+        function generateProcessInputs() {
+            const count = parseInt(document.getElementById('process-count').value);
+            const container = document.getElementById('process-forms');
+            container.innerHTML = '';
+            
+            for (let i = 0; i < count; i++) {
+                const processDiv = document.createElement('div');
+                processDiv.className = 'process-input';
+                processDiv.innerHTML = `
+                    <h3>Process ${i+1}</h3>
+                    <div class="form-group">
+                        <label for="arrival-${i}">Arrival Time:</label>
+                        <input type="number" id="arrival-${i}" min="0" value="${i}">
+                    </div>
+                    <div class="form-group">
+                        <label for="burst-${i}">Burst Time:</label>
+                        <input type="number" id="burst-${i}" min="1" value="${Math.floor(Math.random() * 10) + 1}">
+                    </div>
+                `;
+                container.appendChild(processDiv);
+            }
+        }
+
+        // Run the simulation
+        function runSimulation() {
+            const count = parseInt(document.getElementById('process-count').value);
+            const timeQuantum = parseInt(document.getElementById('time-quantum').value);
+            const algorithm = document.getElementById('algorithm').value;
+            
+            // Create processes
+            const processes = [];
+            const sjfProcesses = [];
+            const fifoProcesses = [];
+            
+            for (let i = 0; i < count; i++) {
+                const arrival = parseInt(document.getElementById(`arrival-${i}`).value);
+                const burst = parseInt(document.getElementById(`burst-${i}`).value);
+                
+                processes.push(new Process(i+1, arrival, burst));
+                sjfProcesses.push(new Process(i+1, arrival, burst));
+                fifoProcesses.push(new Process(i+1, arrival, burst));
+            }
+            
+            // Run selected algorithms
+            let rrResults = null, sjfResults = null, fifoResults = null;
+            
+            if (algorithm === 'all' || algorithm === 'rr') {
+                rrResults = roundRobin([...processes], timeQuantum);
+            }
+            if (algorithm === 'all' || algorithm === 'sjf') {
+                sjfResults = shortestJobFirst([...sjfProcesses]);
+            }
+            if (algorithm === 'all' || algorithm === 'fifo') {
+                fifoResults = fifoScheduling([...fifoProcesses]);
+            }
+            
+            // Display results
+            if (rrResults) {
+                displayResults(rrResults, 'rr');
+                displaySingleResults(rrResults, 'rr-single');
+            }
+            if (sjfResults) {
+                displayResults(sjfResults, 'sjf');
+                displaySingleResults(sjfResults, 'sjf-single');
+            }
+            if (fifoResults) {
+                displayResults(fifoResults, 'fifo');
+                displaySingleResults(fifoResults, 'fifo-single');
+            }
+            
+            // Show results section
+            document.getElementById('results').style.display = 'block';
+            
+            // Set up tab switching
+            setupTabs();
+        }
+
+        // Round Robin Scheduling
+        function roundRobin(processes, timeQuantum) {
+            let currentTime = 0;
+            let completed = 0;
+            const queue = [];
+            const isAdded = new Array(processes.length).fill(false);
+            const ganttChart = [];
+            
+            // Add processes that arrived at time 0
+            for (let i = 0; i < processes.length; i++) {
+                if (processes[i].arrivalTime <= currentTime && !isAdded[i]) {
+                    queue.push(i);
+                    isAdded[i] = true;
+                }
+            }
+            
+            while (completed !== processes.length) {
+                if (queue.length === 0) {
+                    currentTime++;
+                    // Check for new arrivals
+                    for (let i = 0; i < processes.length; i++) {
+                        if (processes[i].arrivalTime <= currentTime && !isAdded[i] && processes[i].remainingTime > 0) {
+                            queue.push(i);
+                            isAdded[i] = true;
+                        }
+                    }
+                    continue;
+                }
+                
+                const idx = queue.shift();
+                const p = processes[idx];
+                
+                // Record start time if not set
+                if (p.startTime === null) {
+                    p.startTime = currentTime;
+                }
+                
+                // Execute for time quantum or until completion
+                const executionTime = Math.min(timeQuantum, p.remainingTime);
+                p.remainingTime -= executionTime;
+                currentTime += executionTime;
+                
+                // Record execution in history
+                p.executionHistory.push({
+                    start: currentTime - executionTime,
+                    end: currentTime,
+                    duration: executionTime
+                });
+                
+                // Add to Gantt chart
+                ganttChart.push({
+                    pid: p.pid,
+                    start: currentTime - executionTime,
+                    end: currentTime
+                });
+                
+                // Check for new arrivals during execution
+                for (let i = 0; i < processes.length; i++) {
+                    if (processes[i].arrivalTime <= currentTime && !isAdded[i] && processes[i].remainingTime > 0) {
+                        queue.push(i);
+                        isAdded[i] = true;
+                    }
+                }
+                
+                // If not finished, add back to queue
+                if (p.remainingTime > 0) {
+                    queue.push(idx);
+                } else {
+                    // Process completed
+                    completed++;
+                    p.completionTime = currentTime;
+                    p.turnaroundTime = p.completionTime - p.arrivalTime;
+                    p.waitingTime = p.turnaroundTime - p.burstTime;
+                }
+            }
+            
+            return {
+                processes: processes,
+                ganttChart: ganttChart,
+                algorithm: 'Round Robin'
+            };
+        }
+
+        // Shortest Job First Scheduling (Non-preemptive)
+        function shortestJobFirst(processes) {
+            let currentTime = 0;
+            let completed = 0;
+            const ganttChart = [];
+            let lastPid = null;
+            let lastStart = 0;
+            
+            // Sort processes by arrival time first
+            processes.sort((a, b) => a.arrivalTime - b.arrivalTime);
+            
+            while (completed !== processes.length) {
+                // Find arrived processes with remaining time
+                const arrived = processes.filter(p => 
+                    p.arrivalTime <= currentTime && p.remainingTime > 0
+                );
+                
+                if (arrived.length === 0) {
+                    currentTime++;
+                    continue;
+                }
+                
+                // Find process with shortest burst time
+                arrived.sort((a, b) => a.burstTime - b.burstTime);
+                const p = arrived[0];
+                
+                // Set start time if not set
+                if (p.startTime === null) {
+                    p.startTime = currentTime;
+                }
+                
+                // Execute entire burst time (non-preemptive)
+                const executionTime = p.remainingTime;
+                currentTime += executionTime;
+                p.remainingTime = 0;
+                
+                // Record execution
+                p.executionHistory.push({
+                    start: currentTime - executionTime,
+                    end: currentTime,
+                    duration: executionTime
+                });
+                
+                // Add to Gantt chart
+                ganttChart.push({
+                    pid: p.pid,
+                    start: currentTime - executionTime,
+                    end: currentTime
+                });
+                
+                // Mark as completed
+                completed++;
+                p.completionTime = currentTime;
+                p.turnaroundTime = p.completionTime - p.arrivalTime;
+                p.waitingTime = p.turnaroundTime - p.burstTime;
+            }
+            
+            return {
+                processes: processes,
+                ganttChart: ganttChart,
+                algorithm: 'Shortest Job First'
+            };
+        }
+
+        // FIFO Scheduling (First-Come First-Served)
+        function fifoScheduling(processes) {
+            let currentTime = 0;
+            const ganttChart = [];
+            
+            // Sort processes by arrival time
+            processes.sort((a, b) => a.arrivalTime - b.arrivalTime);
+            
+            for (const p of processes) {
+                // If no process arrived yet, jump to arrival time
+                if (currentTime < p.arrivalTime) {
+                    currentTime = p.arrivalTime;
+                }
+                
+                // Set start time
+                p.startTime = currentTime;
+                
+                // Execute entire burst time
+                const executionTime = p.burstTime;
+                currentTime += executionTime;
+                p.remainingTime = 0;
+                
+                // Record execution
+                p.executionHistory.push({
+                    start: p.startTime,
+                    end: currentTime,
+                    duration: executionTime
+                });
+                
+                // Add to Gantt chart
+                ganttChart.push({
+                    pid: p.pid,
+                    start: p.startTime,
+                    end: currentTime
+                });
+                
+                // Calculate times
+                p.completionTime = currentTime;
+                p.turnaroundTime = p.completionTime - p.arrivalTime;
+                p.waitingTime = p.turnaroundTime - p.burstTime;
+            }
+            
+            return {
+                processes: processes,
+                ganttChart: ganttChart,
+                algorithm: 'First-In First-Out'
+            };
+        }
+
+        // Display results in combined view
+        function displayResults(results, prefix) {
+            const processes = results.processes;
+            
+            // Create results table
+            let tableHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>PID</th>
+                            <th>Arrival</th>
+                            <th>Burst</th>
+                            <th>Start</th>
+                            <th>Completion</th>
+                            <th>Waiting</th>
+                            <th>Turnaround</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            let totalWaiting = 0;
+            let totalTurnaround = 0;
+            
+            for (const p of processes) {
+                tableHTML += `
+                    <tr>
+                        <td>P${p.pid}</td>
+                        <td>${p.arrivalTime}</td>
+                        <td>${p.burstTime}</td>
+                        <td>${p.startTime}</td>
+                        <td>${p.completionTime}</td>
+                        <td>${p.waitingTime}</td>
+                        <td>${p.turnaroundTime}</td>
+                    </tr>
+                `;
+                
+                totalWaiting += p.waitingTime;
+                totalTurnaround += p.turnaroundTime;
+            }
+            
+            tableHTML += `
+                    </tbody>
+                </table>
+            `;
+            
+            document.getElementById(`${prefix}-table`).innerHTML = tableHTML;
+            
+            // Display statistics
+            const avgWaiting = (totalWaiting / processes.length).toFixed(2);
+            const avgTurnaround = (totalTurnaround / processes.length).toFixed(2);
+            
+            const statsHTML = `
+                <div class="stat-item">
+                    <div class="stat-value">${avgWaiting}</div>
+                    <div class="stat-label">Avg Waiting Time</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${avgTurnaround}</div>
+                    <div class="stat-label">Avg Turnaround Time</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${processes.length}</div>
+                    <div class="stat-label">Total Processes</div>
+                </div>
+            `;
+            
+            document.getElementById(`${prefix}-stats`).innerHTML = statsHTML;
+            
+            // Display Gantt chart
+            displayGanttChart(results.ganttChart, `${prefix}-gantt-container`);
+        }
+
+        // Display results in single algorithm view
+        function displaySingleResults(results, prefix) {
+            const processes = results.processes;
+            
+            // Create results table
+            let tableHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>PID</th>
+                            <th>Arrival</th>
+                            <th>Burst</th>
+                            <th>Start</th>
+                            <th>Completion</th>
+                            <th>Waiting</th>
+                            <th>Turnaround</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            let totalWaiting = 0;
+            let totalTurnaround = 0;
+            
+            for (const p of processes) {
+                tableHTML += `
+                    <tr>
+                        <td>P${p.pid}</td>
+                        <td>${p.arrivalTime}</td>
+                        <td>${p.burstTime}</td>
+                        <td>${p.startTime}</td>
+                        <td>${p.completionTime}</td>
+                        <td>${p.waitingTime}</td>
+                        <td>${p.turnaroundTime}</td>
+                    </tr>
+                `;
+                
+                totalWaiting += p.waitingTime;
+                totalTurnaround += p.turnaroundTime;
+            }
+            
+            tableHTML += `
+                    </tbody>
+                </table>
+            `;
+            
+            document.getElementById(`${prefix}-table`).innerHTML = tableHTML;
+            
+            // Display statistics
+            const avgWaiting = (totalWaiting / processes.length).toFixed(2);
+            const avgTurnaround = (totalTurnaround / processes.length).toFixed(2);
+            
+            const statsHTML = `
+                <div class="stat-item">
+                    <div class="stat-value">${avgWaiting}</div>
+                    <div class="stat-label">Avg Waiting Time</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${avgTurnaround}</div>
+                    <div class="stat-label">Avg Turnaround Time</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${processes.length}</div>
+                    <div class="stat-label">Total Processes</div>
+                </div>
+            `;
+            
+            document.getElementById(`${prefix}-stats`).innerHTML = statsHTML;
+            
+            // Display Gantt chart
+            displayGanttChart(results.ganttChart, `${prefix}-gantt-container`);
+        }
+
+        // Display Gantt chart
+        function displayGanttChart(ganttData, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            if (ganttData.length === 0) return;
+            
+            // Find max time for scaling
+            const maxTime = ganttData[ganttData.length - 1].end;
+            
+            // Create chart
+            const chartDiv = document.createElement('div');
+            chartDiv.className = 'gantt-chart';
+            
+            // Add items to chart
+            for (const item of ganttData) {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'gantt-item';
+                itemDiv.textContent = `P${item.pid}`;
+                itemDiv.style.backgroundColor = getProcessColor(item.pid);
+                itemDiv.style.width = `${(item.end - item.start) * 30}px`;
+                itemDiv.setAttribute('data-end', item.end);
+                chartDiv.appendChild(itemDiv);
+            }
+            
+            // Create time marks
+            const timeMarksDiv = document.createElement('div');
+            timeMarksDiv.className = 'time-marks';
+            
+            for (let time = 0; time <= maxTime; time++) {
+                const timeMark = document.createElement('div');
+                timeMark.className = 'time-mark';
+                timeMark.textContent = time;
+                timeMarksDiv.appendChild(timeMark);
+            }
+            
+            container.appendChild(chartDiv);
+            container.appendChild(timeMarksDiv);
+        }
+
+        // Helper function to generate colors for processes
+        function getProcessColor(pid) {
+            const colors = [
+                '#3498db', '#2ecc71', '#e74c3c', '#f39c12', 
+                '#9b59b6', '#1abc9c', '#d35400', '#34495e'
+            ];
+            return colors[(pid - 1) % colors.length];
+        }
+
+        // Set up tab switching
+        function setupTabs() {
+            const tabs = document.querySelectorAll('.tab');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Remove active class from all tabs
+                    tabs.forEach(t => t.classList.remove('active'));
+                    // Add active class to clicked tab
+                    tab.classList.add('active');
+                    
+                    // Hide all tab contents
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    
+                    // Show selected tab content
+                    const tabId = tab.getAttribute('data-tab');
+                    if (tabId === 'all') {
+                        document.getElementById('all-results').classList.add('active');
+                    } else if (tabId === 'rr') {
+                        document.getElementById('rr-results').classList.add('active');
+                    } else if (tabId === 'sjf') {
+                        document.getElementById('sjf-single-results').classList.add('active');
+                    } else if (tabId === 'fifo') {
+                        document.getElementById('fifo-single-results').classList.add('active');
+                    }
+                });
+            });
+        }
+
+        // Initialize with some processes
+        window.onload = function() {
+            generateProcessInputs();
+        };
+    </script>
+</body>
+</html>
